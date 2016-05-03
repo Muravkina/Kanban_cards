@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import { throttle } from './utils.js';
 import KanbanBoard from './KanbanBoard';
 import update from 'react-addons-update';
 import 'whatwg-fetch';
@@ -16,7 +17,10 @@ class KanbanBoardContainer extends Component {
     this.state = {
       cards: []
     };
+    this.updateCardStatus = throttle(this.updateCardStatus.bind(this));
+    this.updateCardPosition = throttle(this.updateCardPosition.bind(this), 500);
   }
+
   addTask(cardId, taskName) {
     //Keep a reference to the original state prior to the mutations in case of reverting to the optimistic changes in the UI
     let prevState = this.state;
@@ -195,8 +199,8 @@ class KanbanBoardContainer extends Component {
                           add: this.addTask.bind(this)
                         }}
                         cardCallbacks = {{
-                          updateStatus: this.updateCardStatus.bind(this),
-                          updatePosition: this.updateCardPosition.bind(this)
+                          updateStatus: this.updateCardStatus,
+                          updatePosition: this.updateCardPosition
                         }}/>
   }
 }
