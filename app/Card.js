@@ -2,7 +2,7 @@
  import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
  import marked from 'marked';
  import CheckList from './CheckList';
- import { DragSource } from 'react-dnd';
+ import { DragSource, DropTarget } from 'react-dnd';
  import constants from './constants';
 
  let titlePropType = (props, propName, componentName) => {
@@ -16,12 +16,25 @@
     }
  }
 
+ const cardDropSpec = {
+  hover(props, monitor) {
+    const draggedId = monitor.getItem().id;
+    props.cardCallbacks.updatePosition(draggedId, props.id);
+  }
+ }
+
  const cardDragSpec = {
   beginDrag(props) {
     return {
       id: props.id
     }
   }
+ }
+
+ let collectDrop = (connect, monitor) => {
+    return {
+      connectDropTarget: connect.dropTarget()
+    }
  }
 
  let collectDrag = (connect, monitor) => {
@@ -42,7 +55,7 @@
     this.setState({showDetails: !this.state.showDetails});
   }
   render() {
-    const { connectDragSource } = this.props;
+    const { connectDragSource, connectDropTarget } = this.props;
 
     let cardDetails;
     if (this.state.showDetails) {
@@ -64,7 +77,7 @@
       backgroundColor: this.props.color
     }
 
-    return connectDragSource(
+    return connectDropTarget(connectDragSource(
       <div className="card">
         <div style={sideColor}/>
         <div className={
@@ -78,7 +91,7 @@
           {cardDetails}
         </ReactCSSTransitionGroup>
       </div>
-    );
+    ));
   }
  }
 
@@ -90,7 +103,11 @@ Card.propTypes = {
   tasks: PropTypes.arrayOf(PropTypes.object),
   taskCallbacks: PropTypes.object,
   cardCallbacks: PropTypes.object,
-  connectDragSource: PropTypes.func.isRequired
+  connectDragSource: PropTypes.func.isRequired,
+  connectDropTarget: PropTypes.func.isRequired
 }
 
- export default DragSource(constants.CARD, cardDragSpec, collectDrag)(Card);
+const dragHighOrderCard = DragSource(constants.CARD, cardDragSpec, collectDrag)(Card);
+const dragDropHightOrderCard = DropTarget(constants.CARD, cardDropSpec, collectDrop)(dragHighOrderCard)
+
+ export default dragDropHightOrderCard
